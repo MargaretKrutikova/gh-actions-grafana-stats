@@ -29,6 +29,10 @@ export type ApiWorkflowRun = {
   conclusion: string;
 };
 
+export type ApiWorkflowRunTiming = {
+  run_duration_ms: number;
+};
+
 export type ApiJobStep = {
   name: string;
   status: string;
@@ -106,4 +110,18 @@ export const fetchWorkflowRunJobs = async (
 ) => {
   const path = `runs/${runId}/jobs`;
   return fetchAllPages<ApiWorkflowRunJob>(config, path, (data) => data.jobs);
+};
+
+export const fetchWorkflows = async (config: GhApiConfig) => {
+  const path = "workflows";
+  return fetchAllPages<ApiWorkflow>(config, path, (data) => data.workflows);
+};
+
+export const fetchWorkflowRunTiming = async (
+  config: GhApiConfig,
+  runId: number
+) => {
+  const path = `runs/${runId}/timing`;
+  const data = await callGhApi(config, path);
+  return data as ApiWorkflowRunTiming;
 };

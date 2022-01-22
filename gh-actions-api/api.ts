@@ -6,11 +6,15 @@ import {
   fromApiWorkflowRunJob,
   JobStep,
   WorkflowRun,
+  WorkflowRunSummary,
   WorkflowStats,
+  WorkflowSummary,
 } from "./gh-actions-stats";
 import {
   fetchWorkflowRunJobs,
   fetchWorkflowRuns,
+  fetchWorkflowRunTiming,
+  fetchWorkflows,
   GhApiConfig,
 } from "./gh-api-client";
 
@@ -21,7 +25,7 @@ const ghApiConfig: GhApiConfig = {
   accessToken: process.env.GH_ACCESS_TOKEN!,
 };
 
-const ciSrcWorkflowId = 1;
+const ciSrcWorkflowId = 15879208;
 
 const fetchStats = async (): Promise<WorkflowStats> => {
   const apiRuns = await fetchWorkflowRuns(ghApiConfig, ciSrcWorkflowId);
@@ -38,6 +42,30 @@ const fetchStats = async (): Promise<WorkflowStats> => {
   return { id: ciSrcWorkflowId, name: "CI src", runs: workflowRuns };
 };
 
+const fetchWorkflowSummaries = async (): Promise<WorkflowSummary[]> => {
+  const apiWorkflows = await fetchWorkflows(ghApiConfig);
+
+  const workflowSummaries: WorkflowSummary[] = [];
+  for (const workflow of apiWorkflows) {
+    const apiRuns = await fetchWorkflowRuns(ghApiConfig, workflow.id);
+
+    const runs: WorkflowRunSummary[] = [];
+    for (const apiRun of apiRuns) {
+      const timing = await fetchWorkflowRunTiming(ghApiConfig, apiRun.id);
+      runs.push({
+        conclusion: apiRun.conclusion,
+        duration: timing.run_duration_ms,
+        startedAt: apiRun.run_started_at,
+        status: apiRun.status,
+      });
+    }
+
+    workflowSummaries.push({ id: workflow.id, name: workflow.name, runs });
+  }
+
+  return workflowSummaries;
+};
+
 const app = express();
 const PORT = 8000;
 app.get("/", (req, res) => res.send("Express + TypeScript Server"));
@@ -46,6 +74,33 @@ app.get("/stats", async (req, res) => {
   //const stats = await fetchStats();
   const stats = JSON.parse(fs.readFileSync("./stats_ci_src.json", "utf-8"));
   res.send(stats);
+});
+
+app.get("/workflow-summaries", async (req, res) => {
+  // const stats = await fetchWorkflowSummaries();
+  const stats = JSON.parse(
+    fs.readFileSync("./workflow-summaries.json", "utf-8")
+  ) as WorkflowSummary[];
+
+  const transformed = stats.map((workflow) => {
+    const successfulRuns = workflow.runs.filter(
+      (run) => run.conclusion === "success"
+    );
+    const failedRuns = workflow.runs.filter(
+      (run) => run.conclusion === "failure"
+    );
+
+    return {
+      name: workflow.name,
+      numberOfSuccessfulRuns: successfulRuns.length,
+      numberOfFailedRuns: failedRuns.length,
+
+      avgDuration:
+        successfulRuns.reduce((acc, run) => acc + run.duration, 0) /
+        successfulRuns.length,
+    };
+  });
+  res.send(transformed);
 });
 
 app.get("/steps", async (req, res) => {
@@ -57,7 +112,7 @@ app.get("/steps", async (req, res) => {
   const steps = stats.runs
     .filter((run) => run.jobs.length > 0 && run.conclusion === "success")
     .reduce((acc, run) => {
-      const steps = run.jobs[0].steps;
+      const steps = run.jobs[0].steps.filter((s) => s.conclusion === "success");
       return steps ? [...acc, ...steps] : acc;
     }, [] as JobStep[]);
   res.send(steps);

@@ -29,10 +29,23 @@ export type WorkflowRun = {
   jobs: WorkflowRunJob[];
 };
 
+export type WorkflowRunSummary = {
+  startedAt: string;
+  conclusion: string;
+  status: string;
+  duration: number;
+};
+
 export type WorkflowStats = {
   id: number;
   name: string;
   runs: WorkflowRun[];
+};
+
+export type WorkflowSummary = {
+  id: number;
+  name: string;
+  runs: WorkflowRunSummary[];
 };
 
 const calculateDuration = (obj: WithDuration) =>
