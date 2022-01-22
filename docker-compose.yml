@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  grafana:
+    image: grafana/grafana
+    restart: always
+    environment:
+      GF_INSTALL_PLUGINS: "marcusolsson-json-datasource"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    ports:
+      - 4000:3000
+
+volumes:
+  grafana_data: {}
