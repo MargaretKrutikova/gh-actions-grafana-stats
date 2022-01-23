@@ -100,6 +100,7 @@ app.get("/workflow-summaries", async (req, res) => {
         successfulRuns.length,
     };
   });
+
   res.send(transformed);
 });
 
@@ -116,6 +117,39 @@ app.get("/steps", async (req, res) => {
       return steps ? [...acc, ...steps] : acc;
     }, [] as JobStep[]);
   res.send(steps);
+});
+
+app.get("/ci-src-summary", async (req, res) => {
+  const stats = JSON.parse(
+    fs.readFileSync("./stats_ci_src.json", "utf-8")
+  ) as WorkflowStats;
+
+  const steps = stats.runs
+    .filter((run) => run.jobs.length > 0 && run.conclusion === "success")
+    .reduce((acc, run) => {
+      const steps = run.jobs[0].steps.filter((s) => s.conclusion === "success");
+      return steps ? [...acc, ...steps] : acc;
+    }, [] as JobStep[])
+    .reduce((acc, run) => {
+      const current = acc.find((r) => r.name === run.name);
+      const durations = current?.durations || [];
+      return acc
+        .filter((r) => r.name !== run.name)
+        .concat({ name: run.name, durations: [...durations, run.duration] });
+    }, [] as { name: string; durations: number[] }[])
+    .map((s) => ({
+      name: s.name,
+      avgDuration:
+        s.durations.reduce((acc, d) => acc + d, 0) / s.durations.length,
+    }));
+
+  const totalAverage = steps.reduce((acc, s) => acc + s.avgDuration, 0);
+
+  const transformed = steps.map((step) => ({
+    ...step,
+    percent: (step.avgDuration / totalAverage) * 100,
+  }));
+  res.send(transformed);
 });
 
 app.listen(PORT, () => {
