@@ -2,6 +2,7 @@ import {
   ApiJobStep,
   ApiWorkflowRun,
   ApiWorkflowRunJob,
+  ApiWorkflowRunTiming,
   WithDuration,
 } from "./gh-api-client";
 
@@ -14,6 +15,7 @@ export type JobStep = {
 };
 
 export type WorkflowRunJob = {
+  id: number;
   name: string;
   status: string;
   conclusion: string;
@@ -23,29 +25,22 @@ export type WorkflowRunJob = {
 };
 
 export type WorkflowRun = {
+  id: number;
   startedAt: string;
   conclusion: string;
   status: string;
   jobs: WorkflowRunJob[];
-};
-
-export type WorkflowRunSummary = {
-  startedAt: string;
-  conclusion: string;
-  status: string;
   duration: number;
 };
 
-export type WorkflowStats = {
+export type Workflow = {
   id: number;
   name: string;
   runs: WorkflowRun[];
 };
 
-export type WorkflowSummary = {
-  id: number;
-  name: string;
-  runs: WorkflowRunSummary[];
+export type WorkflowStats = {
+  workflows: Workflow[];
 };
 
 const calculateDuration = (obj: WithDuration) =>
@@ -62,6 +57,7 @@ const fromApiJobStep = (step: ApiJobStep): JobStep => ({
 export const fromApiWorkflowRunJob = (
   job: ApiWorkflowRunJob
 ): WorkflowRunJob => ({
+  id: job.id,
   name: job.name,
   status: job.status,
   conclusion: job.conclusion,
@@ -72,10 +68,13 @@ export const fromApiWorkflowRunJob = (
 
 export const fromApiWorkflowRun = (
   run: ApiWorkflowRun,
-  jobs: WorkflowRunJob[]
+  jobs: WorkflowRunJob[],
+  timing: ApiWorkflowRunTiming
 ): WorkflowRun => ({
+  id: run.id,
   status: run.status,
   conclusion: run.conclusion,
   startedAt: run.run_started_at,
+  duration: timing.run_duration_ms,
   jobs,
 });

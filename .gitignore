@@ -130,5 +130,4 @@ dist
 .pnp.*
 
 # temp
-stats_ci_src.json
-workflow-summaries.json
+workflow-stats.json
