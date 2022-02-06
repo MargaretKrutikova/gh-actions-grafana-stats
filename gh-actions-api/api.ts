@@ -80,7 +80,7 @@ app.get("/stats", async (req, res) => {
 
 app.get("/workflow-summaries", async (req, res) => {
   // const stats = await fetchWorkflowSummaries();
-  const stats = readStats();
+  const stats = readStats() as WorkflowStats;
 
   const transformed = stats.workflows.map((workflow) => {
     const successfulRuns = workflow.runs.filter(
@@ -107,7 +107,7 @@ app.get("/workflow-summaries", async (req, res) => {
 app.get("/steps", async (req, res) => {
   // const stats = await fetchStats();
   const name = req.query.name;
-  const stats = readStats();
+  const stats = readStats() as WorkflowStats;
 
   const steps = stats.workflows
     .find((workflow) => workflow.name === name)!
