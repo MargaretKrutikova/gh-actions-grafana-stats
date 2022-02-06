@@ -1,0 +1,40 @@
+[
+  {
+    "id": 2,
+    "uid": "6gcQ1Zb7z",
+    "orgId": 1,
+    "name": "Infinity",
+    "type": "yesoreyeram-infinity-datasource",
+    "typeName": "Infinity",
+    "typeLogoUrl": "public/plugins/yesoreyeram-infinity-datasource/img/icon.svg",
+    "access": "proxy",
+    "url": "__IGNORE_URL__",
+    "password": "",
+    "user": "",
+    "database": "",
+    "basicAuth": false,
+    "isDefault": false,
+    "jsonData": {
+      "global_queries": []
+    },
+    "readOnly": false
+  },
+  {
+    "id": 1,
+    "uid": "rsp3oZbnz",
+    "orgId": 1,
+    "name": "JSON API",
+    "type": "marcusolsson-json-datasource",
+    "typeName": "JSON API",
+    "typeLogoUrl": "public/plugins/marcusolsson-json-datasource/img/logo.svg",
+    "access": "proxy",
+    "url": "http://host.docker.internal:8000/stats",
+    "password": "",
+    "user": "",
+    "database": "",
+    "basicAuth": false,
+    "isDefault": true,
+    "jsonData": {},
+    "readOnly": false
+  }
+]
